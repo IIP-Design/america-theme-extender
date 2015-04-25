@@ -1,0 +1,259 @@
+@import '../../../themes/america/styles/variables';
+@import '../../../themes/america/styles/mixins';
+
+$red:             #8b372b;
+$blue:            #306d85;
+$light-gray:      #f1f3f1;
+
+
+
+
+/*------------------------------------*\
+  #General
+\*------------------------------------*/
+
+
+.content,
+.archive .content {
+  padding: 0;
+}
+
+.america-home a.more-link {
+  margin-top: 1em;
+}
+
+
+
+
+/*------------------------------------*\
+  #SITE-HEADER
+\*------------------------------------*/
+
+
+.site-title {
+  background-image: url(images/pinocchio.jpg);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 3em;
+  padding: 0;
+
+  @include bp($big-mobile) {
+    height: 4em;
+  }
+
+  @include bp($tablet) {
+    height: 5em;
+  }
+
+  @include bp($laptop) {
+    height: 7em;
+  }
+}
+
+.no-backgroundsize .site-title {
+  background: url(images/pinocchio-oldIE.jpg) 0 0 no-repeat;
+  height: 7em;
+}
+
+.america .site-title a,
+.america .site-title a:hover {
+  color: transparent;
+  font-size: 0.75em;
+  line-height: 7em;
+
+  @include bp($big-mobile) {
+    font-size: 1em;
+  }
+}
+
+.no-backgroundsize .america .site-title a,
+.no-backgroundsize .america .site-title a:hover {
+  @extend %visuallyhidden;
+}
+
+
+.genesis-nav-menu.responsive-menu a,
+.genesis-nav-menu.responsive-menu li,
+.genesis-nav-menu.responsive-menu a:hover,
+.genesis-nav-menu.responsive-menu li:hover {
+  color: $black;
+}
+
+
+
+
+/*------------------------------------*\
+  #Primary-Navigation
+\*------------------------------------*/
+
+
+.genesis-nav-menu.responsive-menu .sub-menu {
+  background-color: white;
+}
+
+.america .genesis-nav-menu .sub-menu .current-menu-item > a {
+  color: $black;
+  font-weight: bold;
+}
+
+@include bp($laptop) {
+  .america .genesis-nav-menu .current-menu-parent > a,
+  .america .genesis-nav-menu .current-menu-item > a {
+    border-bottom: 3px solid $blue;
+  }
+
+  .america .genesis-nav-menu .sub-menu .current-menu-item > a,
+  .america .archive-pagination li a {
+    background-color: $blue;
+    border: 1px solid $blue;
+    color: white;
+    font-weight: normal;
+  }
+
+  .genesis-nav-menu .menu-item-language-current {
+    float: right;
+  }
+}
+
+
+
+
+/*------------------------------------*\
+  #Featured-Content
+\*------------------------------------*/
+
+
+.entry-title {
+  margin-bottom: 0.25em;
+}
+
+.entry-meta a,
+.entry-meta a:hover {
+  color: $dark-gray;
+}
+
+.home .featured-content .entry {
+    float: none;
+    margin-bottom: 24px;
+    padding: 0;
+    width: 100%;
+}
+
+.featured-content .entry-title,
+.archive .entry-title,
+.single-post .entry-title,
+.page .entry-title {
+    font-size: 36px;
+    font-weight: 400;
+    margin-top: 0;
+    text-transform: none;
+    width: auto;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: inherit;
+}
+
+.featured-content .entry-content img {
+    width: 100%;
+}
+
+.featuredpost .widget-title {
+    display: block;
+}
+
+.widget-title {
+  background-color: $light-gray;
+  color: $black;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0 0 15px;
+  padding: 5px 15px;
+  text-transform: uppercase;
+}
+
+.home-top,
+.home-middle,
+.home-bottom {
+    padding: 0;
+}
+
+.home-middle .featuredpost .entry {
+	  float: left;
+    width: 100%;
+
+    @include bp($tablet) {
+      width: em(364);
+    }
+
+    @include bp($laptop) {
+      width: em(310);
+    }
+
+    @include bp($desktop) {
+      width: em(380);
+    }
+}
+
+.home-middle .featured-content .entry:nth-of-type(2n+1) {
+    clear: left;
+    margin-right: 40px;
+}
+
+
+
+
+
+/*------------------------------------*\
+  #ENTRY-FOOTER
+\*------------------------------------*/
+
+
+.entry-footer .entry-tags {
+  background: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+
+
+
+/*------------------------------------*\
+  #Sidebar-Widget
+\*------------------------------------*/
+
+
+.sidebar .widget-title {
+  background-color: $light-gray;
+  color: $black;
+}
+
+
+
+
+/*------------------------------------*\
+  #Twitter-Widget
+\*------------------------------------*/
+
+
+#twitter-widget-0 {
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+
+
+
+/*------------------------------------*\
+  #MAILCHIMP
+\*------------------------------------*/
+
+
+.mc4wp-form input[type="submit"] {
+  color: $white;
+  background-color: $blue;
+  border-radius: 0;
+  text-transform: uppercase;
+  width: 100%;
+}

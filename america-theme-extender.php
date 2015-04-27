@@ -25,66 +25,57 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		// path to folder holding customized templates/assets
 		public $site_path;
 
-		// standard templates to customize
-		public $templates = [ 	
-			'404_template', 
-			'archive_template'
-		];
-
-		// non-standard templates to customize
-		public $custom_templates = [ 
-			'front-page.php'
-		];
+		// stores template files
+		public $templates = array();
  
 		public function __construct() {
+
+			$this->site_path = $this->america_get_site_path_part( get_current_blog_id() );  
 			
-			add_action( 'init',						array( $this, 'america_theme_init' ) );
-			add_action( 'wp_enqueue_scripts',		array( $this, 'america_enqueue_css' ) );
-			
-			$this->site_path = $this->america_get_site_path( get_current_blog_id() );  
+			add_action( 'init',	array( $this, 'america_theme_init' ) );
 		}
 
+		/**
+		 * Adds template filter if theme has grandchild assets
+		 * 
+		 * @return void
+		 */
 		public function america_theme_init() {
+			if( $this->has_templates() ) {
+				add_filter( 'template_include', array( $this, 'america_include_template') );
+			}
+		}
+
+		/**
+		 * Initializes assets
+		 * 
+		 * @return void
+		 */
+		public function america_initialize_assets() {
 			$this->america_load_plugin_textdomain();
 			$this->america_register_css();
-			$this->america_add_templates();
+
+			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_css' ) );
 		}
 
-		//* Internationalization
+		/**
+		 * Adds internationalization support
+		 * 
+		 * @return void
+		 */
 		public function america_load_plugin_textdomain () {
 			load_plugin_textdomain ( 'america', FALSE, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 		}
 
 		/**
-		 * Returns the sub site part of the url; used to locate correct asset folder (i.e. /climate or /disinfo)
-		 * Folder names MUST match the path entered in the "path" field of the Edit Sites admin screen
+		 * Register custom css class
 		 * 
-		 * @param  int 		$id current blog_id
-		 * @return string   url part
-		 */
-		public function america_get_site_path( $id ) {
-			$sites = wp_get_sites();
-
-			foreach ( $sites as $site ) {
-				foreach ( $site as $key => $value )  {
-					if( $key == 'blog_id' ) {
-						if( $value == $id ) {
-							extract($site);
-							return substr( $path , 1 );
-						}
-					}
-				}
-			}
-		}
-
-		/**
-		 * Register custom css class if present
 		 * @return void
 		 */
 		public function america_register_css() {
 			$path = $this->site_path;
 
-			$filename = $path . 'style.css';
+			$filename = $path . '/style.css';
 			if ( file_exists ( plugin_dir_path( __FILE__ ) . $filename ) ) {
 				wp_register_style ( 'grandchild_style',  plugins_url( $filename, __FILE__ ) );
 			} 
@@ -96,70 +87,75 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		}
 
 		/**
-		 * Handles template requests for templates that do not have a template filter
+		 * Returns the sub site part of the url; used to locate correct asset folder (i.e. /climate or /disinfo)
+		 * Folder names MUST match the path entered in the "path" field of the Edit Sites admin screen
 		 * 
-		 * @param string $template Template being served
+		 * @param  int 		$id current blog_id
+		 * @return string   url part
 		 */
-		public function add_custom_template_filter( $template ) {
+		public function america_get_site_path_part( $id ) {
+			$sites = wp_get_sites();
 
-			$filename = basename( $template );
-			$in_custom = in_array( $filename, $this->custom_templates );
-
-			if( $in_custom ) {
-				$template = plugin_dir_path( __FILE__ ) .  $this->site_path;
-
-				if( is_front_page() ) { 
-					$template .= 'front-page.php';
+			foreach ( $sites as $site ) {
+				foreach ( $site as $key => $value )  {
+					if( $key == 'blog_id' ) {
+						if( $value == $id ) {
+							extract($site);
+							$len = strlen($path) - 2;
+ 							return substr( $path , 1, $len );
+						}
+					}
 				}
+			}
+		}
+
+
+		/**
+		 * Checks to see if template is in wp->templates array
+		 * Includes it if it is 
+		 * 
+		 * @param string $template template being included
+		 * @return string template path
+		 */
+		public function america_include_template( $template ) {
+			$filename = basename( $template );
+			if( in_array( $filename, $this->templates ) ) {
+				$template = plugin_dir_path( __FILE__ ) .  $this->site_path . '/' . $filename; 
 			}
 
 			return $template;
 		}
 
 		/**
-		 * Handles template requests for templates that do not have a standard template filter
+		 * Checks grandchild folder for customized templates and adds templates to 
+		 * templates array if present
 		 * 
-		 * @param string $template Template being served
+		 * @param  string $dir path to grandchild assets (i.e. /climate, /misinfo )
+		 * @return array    array of templates null if none present
 		 */
-		public function add_template_filter( $template ) {
-			$path = plugin_dir_path( __FILE__ ) . $this->site_path;
-
-			$pos = strpos( $template, '_template' );
-			$filename = $path . substr( $template, 0, $pos ) . '.php';
-			
-			// add_filter expecting a function for second argument, use closure to provide parameter
-			// TODO :  Refactor using apply_filters, i.e. apply_filters('custom filter name', $filename);
-			add_filter ( $template, function() use( $filename ) {
-				return $filename;
-			});
+		function get_templates( $dir ) {
+			foreach ( new TemplateFilter( new DirectoryIterator( $dir ) ) as $file ) {
+				$this->templates[] = $file->getFileName();
+			}
+			return count( $this->templates ) ?  $this->templates : null;
 		}
 
-		
 		/**
-		 * Adds filters to handle incoming template requests 
-		 * If template is present in $templates array, then a customization is served
-		 * Filter templates that do not have a standard template file with 'template_include' filter
-		 * Standard template filters see: https://codex.wordpress.org/Plugin_API/Filter_Reference#Template_Filters
-		 * For standard templates, the customized template should use the standard name, i.e. 404.php, archive.php
+		 * Checks the file system for folder containing customized templates.  If customized
+		 * template folder is present, initialize assets (css, internalization) 
+		 * and check for templates
 		 * 
-		 * @return void
+		 * @return array array of templates in grandchild asset directory
 		 */
-		function america_add_templates() {
-			
-			$templates = $this->templates;
-			$path = plugin_dir_path( __FILE__ ) . $this->site_path;
-		
-			// Add filter to handle templates that do not have a standard filter
-			add_filter( 'template_include', array( $this, 'add_custom_template_filter') );
-
-			foreach ( $templates as $template ) {				
-				$pos = strpos( $template, '_template' );
-				$filename = $path . substr( $template, 0, $pos ) . '.php';
-				
-				if ( file_exists ( $filename ) ) {
-					$this->add_template_filter ( $template ); 
-				} 
-			} 
+		function has_templates () {
+			foreach ( new DirectoryIterator( plugin_dir_path( __FILE__ ) ) as $file ) {
+				if( $file->isDir() ) {
+					if( $file->getFileName() == $this->site_path ) {
+						$this->america_initialize_assets();
+						return $this->get_templates( $file->getPathname() );
+					}
+				}
+			}
 		}
 
 		// ADD ANY ADDITIONAL FUNCTIONS THAT WOULD GO IN functions.php HERE  //
@@ -167,6 +163,16 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 	}
 }
+
+/**
+ * Filter that returns only .php files
+ */
+class TemplateFilter extends FilterIterator { 
+	public function accept() {
+		return preg_match( '@\.php$@i', $this->current() ); 
+	}
+}
+
 
 // Initialize plugin
 $america_theme_extender = new America_Theme_Extender();

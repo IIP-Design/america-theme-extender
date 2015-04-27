@@ -8,3 +8,5 @@ node_modules/
 climate/.sass-cache
 misinfo/.sass-cache
 .sass-cache
+climate/archive.php
+misinfo/front-page.php

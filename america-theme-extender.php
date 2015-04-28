@@ -14,7 +14,6 @@
  ************************************************************************************************************/
 
 //* Prevent loading this file directly
-defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'America_Theme_Extender' ) ) {
 	
@@ -22,18 +21,26 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		const VERSION = '1.0.0';
 
-		// path to folder holding customized templates/assets
-		public $site_path;
+		// directory path to folder holding customized templates/assets
+		public $site_dir;
+
+		// url path to folder holding customized templates/assets
+		public $site_uri;
 
 		// stores template files
 		public $templates = array();
- 
-		public function __construct() {
 
-			$this->site_path = $this->america_get_site_path_part( get_current_blog_id() );  
-			
+		// stores js files
+		public $js = array();
+ 
+		public function __construct( $site_path ) {
+
+			$this->site_dir = get_stylesheet_directory() . '/' . $site_path;
+			$this->site_uri = get_stylesheet_directory_uri() . '/' . $site_path;
+
 			add_action( 'init',	array( $this, 'america_theme_init' ) );
 		}
+
 
 		/**
 		 * Adds template filter if theme has grandchild assets
@@ -41,21 +48,28 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return void
 		 */
 		public function america_theme_init() {
-			if( $this->has_templates() ) {
+
+			$this->america_initialize_assets();
+
+			$templates = $this->get_templates( $this->site_dir );
+			if( $templates !== NULL ) {
 				add_filter( 'template_include', array( $this, 'america_include_template') );
 			}
+			
 		}
 
 		/**
-		 * Initializes assets
+		 * Initializes register css and load text domain
 		 * 
 		 * @return void
 		 */
 		public function america_initialize_assets() {
 			$this->america_load_plugin_textdomain();
 			$this->america_register_css();
+			//$this->america_register_js();
 
 			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_css' ) );
+			//add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_js' ) );
 		}
 
 		/**
@@ -73,11 +87,28 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return void
 		 */
 		public function america_register_css() {
-			$path = $this->site_path;
+			$filename = $this->site_dir . '/style.css';
+			
+			if ( file_exists ( $filename ) ) {
+				wp_register_style ( 'grandchild_style',  $this->site_uri . '/style.css' );
+			} 
+		 }
 
-			$filename = $path . '/style.css';
-			if ( file_exists ( plugin_dir_path( __FILE__ ) . $filename ) ) {
-				wp_register_style ( 'grandchild_style',  plugins_url( $filename, __FILE__ ) );
+		 /**
+		 * Register custom js classes
+		 * 
+		 * @return void
+		 */
+		public function america_register_js() {
+			$jsDir = $this->site_dir . '/js';
+			
+			if ( file_exists ( $jsDir ) ) {
+				foreach ( new JSFilter( new DirectoryIterator( $jsDir ) ) as $file ) {
+					$path =  $jsDir . '/' . $file->getFileName();
+					$fn = basename( $path, '.js' ); 
+					$this->js[] = $fn;
+					wp_register_script ( $fn,  $this->site_uri . '/js/' . $file->getFileName() );
+				}
 			} 
 		 }
 
@@ -86,25 +117,10 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			wp_enqueue_style( 'grandchild_style' );
 		}
 
-		/**
-		 * Returns the sub site part of the url; used to locate correct asset folder (i.e. /climate or /disinfo)
-		 * Folder names MUST match the path entered in the "path" field of the Edit Sites admin screen
-		 * 
-		 * @param  int 		$id current blog_id
-		 * @return string   url part
-		 */
-		public function america_get_site_path_part( $id ) {
-			$sites = wp_get_sites();
-
-			foreach ( $sites as $site ) {
-				foreach ( $site as $key => $value )  {
-					if( $key == 'blog_id' ) {
-						if( $value == $id ) {
-							extract($site);
-							$len = strlen($path) - 2;
- 							return substr( $path , 1, $len );
-						}
-					}
+		public function america_enqueue_js () {
+			if( count($this->js) ) {
+				foreach ( $this->js as $file ) {
+					wp_enqueue_style( $file );
 				}
 			}
 		}
@@ -114,13 +130,13 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * Checks to see if template is in wp->templates array
 		 * Includes it if it is 
 		 * 
-		 * @param string $template template being included
+		 * @param string  $template template being included
 		 * @return string template path
 		 */
 		public function america_include_template( $template ) {
 			$filename = basename( $template );
 			if( in_array( $filename, $this->templates ) ) {
-				$template = plugin_dir_path( __FILE__ ) .  $this->site_path . '/' . $filename; 
+				$template = $this->site_dir . '/' . $filename; 
 			}
 
 			return $template;
@@ -130,36 +146,15 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * Checks grandchild folder for customized templates and adds templates to 
 		 * templates array if present
 		 * 
-		 * @param  string $dir path to grandchild assets (i.e. /climate, /misinfo )
-		 * @return array    array of templates null if none present
+		 * @param  string  dir path to grandchild assets (i.e. /climate, /misinfo )
+		 * @return array   array of templates null if none present
 		 */
 		function get_templates( $dir ) {
 			foreach ( new TemplateFilter( new DirectoryIterator( $dir ) ) as $file ) {
 				$this->templates[] = $file->getFileName();
 			}
-			return count( $this->templates ) ?  $this->templates : null;
+			return count( $this->templates ) ?  $this->templates : NULL;
 		}
-
-		/**
-		 * Checks the file system for folder containing customized templates.  If customized
-		 * template folder is present, initialize assets (css, internalization) 
-		 * and check for templates
-		 * 
-		 * @return array array of templates in grandchild asset directory
-		 */
-		function has_templates () {
-			foreach ( new DirectoryIterator( plugin_dir_path( __FILE__ ) ) as $file ) {
-				if( $file->isDir() ) {
-					if( $file->getFileName() == $this->site_path ) {
-						$this->america_initialize_assets();
-						return $this->get_templates( $file->getPathname() );
-					}
-				}
-			}
-		}
-
-		// ADD ANY ADDITIONAL FUNCTIONS THAT WOULD GO IN functions.php HERE  //
-
 
 	}
 }
@@ -173,6 +168,12 @@ class TemplateFilter extends FilterIterator {
 	}
 }
 
+/**
+ * Filter that returns only .js files
+ */
+class JSFilter extends FilterIterator { 
+	public function accept() {
+		return preg_match( '@\.js$@i', $this->current() ); 
+	}
+}
 
-// Initialize plugin
-$america_theme_extender = new America_Theme_Extender();

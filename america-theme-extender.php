@@ -33,10 +33,15 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		// stores js files
 		public $js = array();
  
-		public function __construct( $site_path ) {
+		/**
+		 * Constructor
+		 * @param string $site_dir directory to grandchild assets
+		 * @param string $site_uri url to grandchild assets
+		 */
+		public function __construct( $site_dir, $site_uri ) {
 
-			$this->site_dir = get_stylesheet_directory() . '/' . $site_path;
-			$this->site_uri = get_stylesheet_directory_uri() . '/' . $site_path;
+			$this->site_dir = $site_dir;
+			$this->site_uri = $site_uri;
 
 			add_action( 'init',	array( $this, 'america_theme_init' ) );
 		}
@@ -65,10 +70,11 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 */
 		public function america_initialize_assets() {
 			$this->america_load_plugin_textdomain();
+			
 			$this->america_register_css();
-			//$this->america_register_js();
-
 			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_css' ) );
+			
+			//$this->america_register_js();
 			//add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_js' ) );
 		}
 
@@ -107,7 +113,9 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 					$path =  $jsDir . '/' . $file->getFileName();
 					$fn = basename( $path, '.js' ); 
 					$this->js[] = $fn;
-					wp_register_script ( $fn,  $this->site_uri . '/js/' . $file->getFileName() );
+					$url = $this->site_uri . '/js/' . $file->getFileName();
+					
+					wp_register_script ( $fn,  $url );
 				}
 			} 
 		 }

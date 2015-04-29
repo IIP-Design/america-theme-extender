@@ -14,6 +14,7 @@
  ************************************************************************************************************/
 
 //* Prevent loading this file directly
+defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'America_Theme_Extender' ) ) {
 	
@@ -29,9 +30,6 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		// stores template files
 		public $templates = array();
-
-		// stores js files
-		public $js = array();
  
 		/**
 		 * Constructor
@@ -58,9 +56,8 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 			$templates = $this->get_templates( $this->site_dir );
 			if( $templates !== NULL ) {
-				add_filter( 'template_include', array( $this, 'america_include_template') );
+				add_filter( 'template_include', array( $this, 'america_include_template' ) );
 			}
-			
 		}
 
 		/**
@@ -74,8 +71,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			$this->america_register_css();
 			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_css' ) );
 			
-			//$this->america_register_js();
-			//add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_js' ) );
+			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_js' ) );
 		}
 
 		/**
@@ -93,8 +89,8 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return void
 		 */
 		public function america_register_css() {
+
 			$filename = $this->site_dir . '/style.css';
-			
 			if ( file_exists ( $filename ) ) {
 				wp_register_style ( 'grandchild_style',  $this->site_uri . '/style.css' );
 			} 
@@ -105,17 +101,15 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * 
 		 * @return void
 		 */
-		public function america_register_js() {
+		public function america_enqueue_js() {		
 			$jsDir = $this->site_dir . '/js';
 			
 			if ( file_exists ( $jsDir ) ) {
 				foreach ( new JSFilter( new DirectoryIterator( $jsDir ) ) as $file ) {
 					$path =  $jsDir . '/' . $file->getFileName();
 					$fn = basename( $path, '.js' ); 
-					$this->js[] = $fn;
 					$url = $this->site_uri . '/js/' . $file->getFileName();
-					
-					wp_register_script ( $fn,  $url );
+					wp_enqueue_script ( $fn,  $url );
 				}
 			} 
 		 }
@@ -123,14 +117,6 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		public function america_enqueue_css () {
 			wp_enqueue_style( 'grandchild_style' );
-		}
-
-		public function america_enqueue_js () {
-			if( count($this->js) ) {
-				foreach ( $this->js as $file ) {
-					wp_enqueue_style( $file );
-				}
-			}
 		}
 
 

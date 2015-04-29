@@ -55,6 +55,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			$this->america_initialize_assets();
 
 			$templates = $this->get_templates( $this->site_dir );
+			echo 'templates : ' . gettype($templates) . '<br>';
 			if( $templates !== NULL ) {
 				add_filter( 'template_include', array( $this, 'america_include_template' ) );
 			}
@@ -91,7 +92,9 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		public function america_register_css() {
 
 			$filename = $this->site_dir . '/style.css';
+			echo 'filename : ' . $filename . '<br>';
 			if ( file_exists ( $filename ) ) {
+				echo 'file exists : ' . $filename . '<br>';
 				wp_register_style ( 'grandchild_style',  $this->site_uri . '/style.css' );
 			} 
 		 }
@@ -128,6 +131,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return string template path
 		 */
 		public function america_include_template( $template ) {
+			echo 'include : ' . $template . '<br>';
 			$filename = basename( $template );
 			if( in_array( $filename, $this->templates ) ) {
 				$template = $this->site_dir . '/' . $filename; 

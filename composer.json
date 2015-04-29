@@ -1,0 +1,15 @@
+{
+    "name": "iip-design/america-theme-extender",
+    "type": "wordpress-plugin",
+    "description" : "Extends america base theme",
+    "authors": [
+        {
+            "name": "Office of Design, Bureau of International Information Programs",
+            "email": "reganta@america.gov"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+       "composer/installers": "~1.0"
+    }
+}

@@ -5,7 +5,7 @@
   
  Plugin Name: 	  America Theme Extender
  Description:     This plugin allows the america base theme to be extended (i.e. grandchild theme)
- Version:         0.0.1
+ Version:         1.0.0
  Author:          Office of Design, Bureau of International Information Programs
  License:         GPL-2.0+
  Text Domain:     america

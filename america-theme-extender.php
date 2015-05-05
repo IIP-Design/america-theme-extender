@@ -41,6 +41,9 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			$this->site_dir = $site_dir;
 			$this->site_uri = $site_uri;
 
+			echo 'url : ' . $this->site_uri . '<br>';
+			echo 'dir : ' . $this->site_dir . '<br>';
+
 			add_action( 'init',	array( $this, 'america_theme_init' ) );
 		}
 
@@ -129,10 +132,11 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 */
 		public function america_include_template( $template ) {
 			$filename = basename( $template );
+			echo 'incoming template ' . $filename . '<br>';
 			if( in_array( $filename, $this->templates ) ) {
 				$template = $this->site_dir . '/' . $filename; 
 			}
-
+			echo 'outgoing template ' . $template . '<br>';
 			return $template;
 		}
 

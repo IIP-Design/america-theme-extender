@@ -5,7 +5,7 @@
   
  Plugin Name: 	  America Theme Extender
  Description:     This plugin allows the america base theme to be extended (i.e. grandchild theme)
- Version:         1.0.0
+ Version:         1.1.0
  Author:          Office of Design, Bureau of International Information Programs
  License:         GPL-2.0+
  Text Domain:     america
@@ -88,8 +88,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * 
 		 * @return void
 		 */
-		public function america_register_css() {
-
+		public function america_register_css() { 
 			$filename = $this->site_dir . '/style.css';
 			if ( file_exists ( $filename ) ) {
 				wp_register_style ( 'grandchild_style',  $this->site_uri . '/style.css' );
@@ -122,18 +121,89 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		/**
 		 * Checks to see if template is in wp->templates array
-		 * Includes it if it is 
+		 * Include it if it is 
+		 *
+		 * Template Hierarchy
+		 * is_archive : archive-category.{slug}.php -> archive-category.{tag}.php -> category.php -> archive.php 
+		 * 		   	  : archive-tag.{slug}.php -> archive-tag.{tag}.php -> tag.php -> archive.php
+		 * 		   	  : archive-{taxonomy-term}.php -> archive-{taxonomy}.php -> taxonomy.php -> archive.php
+		 * 		   	  : archive-{post-type}.php -> archive.php  
+		 * 		   	  : date.php
+		 * 		   	  : author.php
 		 * 
 		 * @param string  $template template being included
 		 * @return string template path
 		 */
 		public function america_include_template( $template ) {
-			$filename = basename( $template );			
+			$filename = $this->search_for_template();
+			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );	
+			//echo 'filename ' . $filename;
+			
 			if( in_array( $filename, $this->templates ) ) {
 				$template = $this->site_dir . '/' . $filename; 
 			}
 			return $template;
 		}
+
+		/**
+		 * Determines which type of template is loaded and then looks for matching templates
+		 * starting with more specific and working out according to the template hierarchy
+		 * 
+		 * @return string filename of matched template
+		 */
+		function search_for_template() {
+			$obj = get_queried_object();
+			$filename = '';
+			
+			if ( is_tax() ) {
+				$term = 'taxonomy-' . $obj->slug . '.php';
+				$taxonomy = 'taxonomy-' . $obj->taxonomy . '.php';
+
+				if( $this->has_template( $term ) ) {
+					$filename = $term;
+				} 
+				else if ( $this->has_template( $taxonomy ) ) {
+					$filename = $taxonomy;
+				} 
+				else if ( $this->has_template( 'taxonomy.php' ) ) {
+					$filename = 'taxonomy.php';
+				}
+			} 
+
+			else if ( is_post_type_archive() ) {
+				$cpt = 'archive-' . $obj->name . '.php';
+				if( $this->has_template( $term ) ) {
+					$filename = $cpt;
+				}
+			} 
+
+			else if ( is_category() ) {
+				$slug = 'category-' . $obj->slug . '.php';
+				$id = 'category-' . $obj->cat_ID . '.php';
+				
+				if( $this->has_template( $slug ) ) {
+					$filename = $slug;
+				}
+				else if ( $this->has_template( $id ) ) {
+					$filename = $id;
+				} 
+				else if ( $this->has_template( 'category.php' ) ) {
+					$filename = 'category.php';
+				}
+			}
+
+			return $filename;
+		}
+
+		/**
+		 * Checks to see if template is in custom template array
+		 * @param  string  $template filename to look for
+		 * @return boolean           
+		 */
+		function has_template( $template ) {
+			return in_array( $template, $this->templates ) ;
+		}
+
 
 		/**
 		 * Checks grandchild folder for customized templates and adds templates to 
@@ -148,7 +218,6 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			}
 			return count( $this->templates ) ?  $this->templates : NULL;
 		}
-
 	}
 }
 

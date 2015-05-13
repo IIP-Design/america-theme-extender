@@ -142,9 +142,9 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return string template path
 		 */
 		public function america_include_template( $template ) {
+			
 			$filename = $this->search_for_template();
 			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );	
-			//echo 'filename ' . $filename;
 			
 			if( in_array( $filename, $this->templates ) ) {
 				$template = $this->site_dir . '/' . $filename; 
@@ -179,7 +179,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 			else if ( is_post_type_archive() ) {
 				$cpt = 'archive-' . $obj->name . '.php';
-				if( $this->has_template( $term ) ) {
+				if( $this->has_template( $cpt ) ) {
 					$filename = $cpt;
 				}
 			} 
@@ -196,6 +196,19 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 				} 
 				else if ( $this->has_template( 'category.php' ) ) {
 					$filename = 'category.php';
+				}
+
+			} else if ( is_singular() ) {
+				if ( is_single() ) {
+					$post_type = $obj->post_type;
+					$post = 'single-' . $post_type . '.php';
+					
+					if ( $this->has_template( $post ) )  {
+						$filename = $post;
+					}
+					
+				} else if ( is_page() ) {
+					// not sure if we need this as custom pages may be directly linked to
 				}
 			}
 
@@ -225,6 +238,27 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			}
 			return count( $this->templates ) ?  $this->templates : NULL;
 		}
+
+		/**
+		 * Testing util method
+		 */
+		function debug_template_search ( $obj, $template ) {
+			echo 'tax ' .	   is_tax() . '<br>';
+			echo 'cpt ' .	   is_post_type_archive() . '<br>';
+			echo 'cat ' .	   is_category() . '<br>';
+			echo 'single post' .   is_single() . '<br>';
+			echo 'page ' .	   is_page() . '<br>';
+			echo 'tag ' .	   is_tag() . '<br>';
+			echo 'singular of any type ' .	   is_singular() . '<br>';
+			
+			echo 'default template : ' . $template . '<br>';
+			echo 'FILENAME ' . $filename;
+
+			echo '<pre>';
+			var_dump($obj);
+			echo '</pre>';
+		}
+
 	}
 }
 

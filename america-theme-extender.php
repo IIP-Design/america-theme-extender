@@ -20,7 +20,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 	
 	class America_Theme_Extender {
 
-		const VERSION = '1.0.0';
+		const VERSION = '1.1.0';
 
 		// directory path to folder holding customized templates/assets
 		public $site_dir;
@@ -40,13 +40,13 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 			$this->site_dir = $site_dir;
 			$this->site_uri = $site_uri;
-
+ 
 			add_action( 'init',	array( $this, 'america_theme_init' ) );
 		}
 
 
 		/**
-		 * Adds template filter if theme has grandchild assets
+		 * Adds template filter if any theme has grandchild assets
 		 * 
 		 * @return void
 		 */
@@ -96,22 +96,29 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 }
 
 		 /**
-		 * Register custom js classess
+		 * Register custom js classess by recursing thru the folders in the /js/dist directory
+		 * and filtering out .js files
 		 * 
 		 * @return void
 		 */
-		public function america_enqueue_js() {		
-			$jsDir = $this->site_dir . '/js';
+		 public function america_enqueue_js() {		
+			$dist = $this->site_dir . '/js/dist';
 			
-			if ( file_exists ( $jsDir ) ) {
-				foreach ( new JSFilter( new DirectoryIterator( $jsDir ) ) as $file ) {
-					$path =  $jsDir . '/' . $file->getFileName();
+			if ( file_exists ( $dist ) ) {
+				$dir = new RecursiveDirectoryIterator( $dist ); 
+				foreach ( new JSFilter( new RecursiveIteratorIterator( $dir ) ) as $file ) {
+				
+					$dir_path = realpath($file);
+					$site = basename($this->site_dir);
+					$start = stripos( $dir_path, $site ) + strlen($site);
+					$path = substr( $dir_path, $start );
+					
 					$fn = basename( $path, '.js' ); 
-					$url = $this->site_uri . '/js/' . $file->getFileName();
+					$url = $this->site_uri . $path;
 					wp_enqueue_script ( $fn,  $url );
 				}
 			} 
-		 }
+		}
 
 
 		public function america_enqueue_css () {

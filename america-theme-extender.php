@@ -54,7 +54,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 			$this->america_initialize_assets();
 
-			$templates = $this->get_templates( $this->site_dir );
+			$templates = $this->america_get_templates( $this->site_dir );
 			if( $templates !== NULL ) {
 				add_filter( 'template_include', array( $this, 'america_include_template' ) );
 			}
@@ -144,7 +144,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		public function america_include_template( $template ) {
 			//echo 'incoming: ' . $template . '<br>';
 
-			$filename = $this->search_for_template();
+			$filename = $this->america_search_for_template();
 			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );	
 			
 			if( in_array( $filename, $this->templates ) ) {
@@ -152,8 +152,34 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			}
 
 			//echo 'outgoing: ' . $template . '<br><br>';
+			//$this->debug_content_type(true);
 
 			return $template;
+		}
+
+		/**
+		 * Looks for matching custom templates
+		 * @param  string $type taxonomy/category or tag
+		 * @param  string $slug slug
+		 * @param  string $id   term/cat id
+		 * @return string       matched template or empty if none is found
+		 */
+		function america_fetch_template_type( $type, $slug, $id ) {
+			$filename = "";
+			$slug = "$type-$slug.php";
+			$id = "$type-$id.php";
+
+			if( $this->america_has_template( $slug ) ) {
+				$filename = $slug;
+			} 
+			else if ( $this->america_has_template( $id ) ) {
+				$filename = $id;
+			} 
+			else if ( $this->america_has_template( "$type.php" ) ) {
+				$filename = "$type.php";
+			}
+
+			return $filename;
 		}
 
 		/**
@@ -162,64 +188,42 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * 
 		 * @return string filename of matched template
 		 */
-		function search_for_template() {
+		function america_search_for_template() {
 			$obj = get_queried_object();
 			$filename = '';
 			
 			// taxonomy archives
 			if ( is_tax() ) {
-				$term = 'taxonomy-' . $obj->slug . '.php';
-				$taxonomy = 'taxonomy-' . $obj->taxonomy . '.php';
-
-				if( $this->has_template( $term ) ) {
-					$filename = $term;
-				} 
-				else if ( $this->has_template( $taxonomy ) ) {
-					$filename = $taxonomy;
-				} 
-				else if ( $this->has_template( 'taxonomy.php' ) ) {
-					$filename = 'taxonomy.php';
-				}
+				$filename = $this->america_fetch_template_type( 'taxonomy', $obj->slug,  $obj->taxonomy );
 			} 
 			
+			// category archives
+			else if ( is_category() ) {		
+				$filename = $this->america_fetch_template_type( 'category', $obj->slug,  $obj->cat_ID );
+			}
+			// tag archives
+			else if ( is_tag() ) {
+				$filename = $this->america_fetch_template_type( 'tag', $obj->slug,  $obj->term_id );
+			}
+
 			// custom post type archives
 			else if ( is_post_type_archive() ) {
 				$cpt = 'archive-' . $obj->name . '.php';
-				if( $this->has_template( $cpt ) ) {
+				if( $this->america_has_template( $cpt ) ) {
 					$filename = $cpt;
 				}
 			} 
 
-			// category archives
-			else if ( is_category() ) {
-				$slug = 'category-' . $obj->slug . '.php';
-				$id = 'category-' . $obj->cat_ID . '.php';
-				
-				if( $this->has_template( $slug ) ) {
-					$filename = $slug;
-				}
-				else if ( $this->has_template( $id ) ) {
-					$filename = $id;
-				} 
-				else if ( $this->has_template( 'category.php' ) ) {
-					$filename = 'category.php';
-				}
-
-			// tag archives
-			else if ( is_tag() ) {
-
-			}
-
 			// single posts/pages
 			// is_singular() : returns true for any is_single(), is_page(), or is_attachment()
-			} else if ( is_singular() ) {
+			else if ( is_singular() ) {
 				
 				// is_single() : returns true for single post of any post type (except attachment and page post types)				
 				if ( is_single() ) {
 					$post_type = $obj->post_type;
 					$post = 'single-' . $post_type . '.php';
 					
-					if( $this->has_template( $post ) ) {
+					if( $this->america_has_template( $post ) ) {
 						$filename = $post;
 					}
 					
@@ -236,7 +240,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @param  string  $template filename to look for
 		 * @return boolean           
 		 */
-		function has_template( $template ) {
+		function america_has_template( $template ) {
 			return in_array( $template, $this->templates ) ;
 		}
 
@@ -248,7 +252,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @param  string  dir path to grandchild assets (i.e. /climate, /misinfo )
 		 * @return array   array of templates null if none present
 		 */
-		function get_templates( $dir ) {
+		function america_get_templates( $dir ) {
 			foreach ( new TemplateFilter( new DirectoryIterator( $dir ) ) as $file ) {
 				$this->templates[] = $file->getFileName();
 			}
@@ -258,10 +262,9 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		/**
 		 * Testing util method
 		 */
-		function debug_content_type ( $template, $filename ) {
+		function debug_content_type ( $dump = false ) {
 			$obj = get_queried_object();
 
-			echo 'outgoing: ' . $filename . '<br><br>';
 			echo 'tax ' .	   is_tax() . '<br>';
 			echo 'cpt ' .	   is_post_type_archive() . '<br>';
 			echo 'cat ' .	   is_category() . '<br>';
@@ -270,9 +273,11 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			echo 'tag ' .	   is_tag() . '<br>';
 			echo 'singular of any type ' .	   is_singular() . '<br>';
 		
-			echo '<pre>';
-			var_dump($obj);
-			echo '</pre>';
+			if( $dump ) {
+				echo '<pre>';
+				var_dump($obj);
+				echo '</pre>';
+			}
 		}
 
 	}

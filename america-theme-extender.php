@@ -142,13 +142,17 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return string template path
 		 */
 		public function america_include_template( $template ) {
-			
+			//echo 'incoming: ' . $template . '<br>';
+
 			$filename = $this->search_for_template();
 			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );	
 			
 			if( in_array( $filename, $this->templates ) ) {
 				$template = $this->site_dir . '/' . $filename; 
 			}
+
+			//echo 'outgoing: ' . $template . '<br><br>';
+
 			return $template;
 		}
 
@@ -162,6 +166,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			$obj = get_queried_object();
 			$filename = '';
 			
+			// taxonomy archives
 			if ( is_tax() ) {
 				$term = 'taxonomy-' . $obj->slug . '.php';
 				$taxonomy = 'taxonomy-' . $obj->taxonomy . '.php';
@@ -176,7 +181,8 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 					$filename = 'taxonomy.php';
 				}
 			} 
-
+			
+			// custom post type archives
 			else if ( is_post_type_archive() ) {
 				$cpt = 'archive-' . $obj->name . '.php';
 				if( $this->has_template( $cpt ) ) {
@@ -184,6 +190,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 				}
 			} 
 
+			// category archives
 			else if ( is_category() ) {
 				$slug = 'category-' . $obj->slug . '.php';
 				$id = 'category-' . $obj->cat_ID . '.php';
@@ -198,12 +205,21 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 					$filename = 'category.php';
 				}
 
+			// tag archives
+			else if ( is_tag() ) {
+
+			}
+
+			// single posts/pages
+			// is_singular() : returns true for any is_single(), is_page(), or is_attachment()
 			} else if ( is_singular() ) {
+				
+				// is_single() : returns true for single post of any post type (except attachment and page post types)				
 				if ( is_single() ) {
 					$post_type = $obj->post_type;
 					$post = 'single-' . $post_type . '.php';
 					
-					if ( $this->has_template( $post ) )  {
+					if( $this->has_template( $post ) ) {
 						$filename = $post;
 					}
 					
@@ -242,7 +258,10 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		/**
 		 * Testing util method
 		 */
-		function debug_template_search ( $obj, $template ) {
+		function debug_content_type ( $template, $filename ) {
+			$obj = get_queried_object();
+
+			echo 'outgoing: ' . $filename . '<br><br>';
 			echo 'tax ' .	   is_tax() . '<br>';
 			echo 'cpt ' .	   is_post_type_archive() . '<br>';
 			echo 'cat ' .	   is_category() . '<br>';
@@ -250,10 +269,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			echo 'page ' .	   is_page() . '<br>';
 			echo 'tag ' .	   is_tag() . '<br>';
 			echo 'singular of any type ' .	   is_singular() . '<br>';
-			
-			echo 'default template : ' . $template . '<br>';
-			echo 'FILENAME ' . $filename;
-
+		
 			echo '<pre>';
 			var_dump($obj);
 			echo '</pre>';

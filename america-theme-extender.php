@@ -131,12 +131,19 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * Include it if it is 
 		 *
 		 * Template Hierarchy
-		 * is_archive : archive-category.{slug}.php -> archive-category.{tag}.php -> category.php -> archive.php 
-		 * 		   	  : archive-tag.{slug}.php -> archive-tag.{tag}.php -> tag.php -> archive.php
-		 * 		   	  : archive-{taxonomy-term}.php -> archive-{taxonomy}.php -> taxonomy.php -> archive.php
-		 * 		   	  : archive-{post-type}.php -> archive.php  
-		 * 		   	  : date.php
-		 * 		   	  : author.php
+		 * is_archive : 
+		 * archive-category.{slug}.php -> archive-category.{tag}.php -> category.php -> archive.php 
+		 * 		archive-tag.{slug}.php -> archive-tag.{tag}.php -> tag.php -> archive.php
+		 * 		archive-{taxonomy-term}.php -> archive-{taxonomy}.php -> taxonomy.php -> archive.php
+		 * 		date.php
+		 * 		author.php
+		 * 	
+		 *  is_post_type_archive()
+		 *  	archive-{post-type}.php -> archive.php 
+		 *  	
+		 *  is_singular()
+		 *  	single-{post-type}.php -> single.php 
+		 *  	single-post.php -> single.php
 		 * 
 		 * @param string  $template template being included
 		 * @return string template path
@@ -265,13 +272,13 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		function debug_content_type ( $dump = false ) {
 			$obj = get_queried_object();
 
-			echo 'tax ' .	   is_tax() . '<br>';
-			echo 'cpt ' .	   is_post_type_archive() . '<br>';
-			echo 'cat ' .	   is_category() . '<br>';
-			echo 'single post' .   is_single() . '<br>';
-			echo 'page ' .	   is_page() . '<br>';
-			echo 'tag ' .	   is_tag() . '<br>';
-			echo 'singular of any type ' .	   is_singular() . '<br>';
+			echo 'tax ' 		 .	   is_tax() . '<br>';
+			echo 'cpt ' 		 .	   is_post_type_archive() . '<br>';
+			echo 'cat ' 		 .	   is_category() . '<br>';
+			echo 'single post'   .     is_single() . '<br>';
+			echo 'page ' 		 .	   is_page() . '<br>';
+			echo 'tag ' 		 .	   is_tag() . '<br>';
+			echo 'singular any ' .	   is_singular() . '<br>';
 		
 			if( $dump ) {
 				echo '<pre>';

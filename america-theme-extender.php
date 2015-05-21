@@ -69,8 +69,8 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			$this->america_load_plugin_textdomain();
 			
 			$this->america_register_css();
+
 			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_css' ) );
-			
 			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_js' ) );
 		}
 
@@ -115,7 +115,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 					
 					$fn = basename( $path, '.js' ); 
 					$url = $this->site_uri . $path;
-					wp_enqueue_script ( $fn,  $url );
+					wp_enqueue_script ( $fn,  $url, '', '', true );
 				}
 			} 
 		}
@@ -149,7 +149,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		 * @return string template path
 		 */
 		public function america_include_template( $template ) {
-			//echo 'incoming: ' . $template . '<br>';
+			echo 'incoming: ' . $template . '<br>';
 
 			$filename = $this->america_search_for_template();
 			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );	
@@ -158,7 +158,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 				$template = $this->site_dir . '/' . $filename; 
 			}
 
-			//echo 'outgoing: ' . $template . '<br><br>';
+			echo 'outgoing: ' . $template . '<br><br>';
 			//$this->debug_content_type(true);
 
 			return $template;
@@ -279,6 +279,8 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			echo 'page ' 		 .	   is_page() . '<br>';
 			echo 'tag ' 		 .	   is_tag() . '<br>';
 			echo 'singular any ' .	   is_singular() . '<br>';
+			echo 'search ' 		 .	   is_search() . '<br>';
+			echo 'page ' 		 .	   is_page() . '<br>';
 		
 			if( $dump ) {
 				echo '<pre>';

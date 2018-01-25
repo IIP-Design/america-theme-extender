@@ -2,22 +2,22 @@
 
 /**********************************************************************************************************
  Extends America Base Themes
-  
+
  Plugin Name: 	  America Theme Extender
  Description:     This plugin allows the america base theme to be extended (i.e. grandchild theme)
- Version:         1.2.0
+ Version:         1.2.2
  Author:          Office of Design, Bureau of International Information Programs
  License:         GPL-2.0+
  Text Domain:     america
  Domain Path:     /languages
- 
+
  ************************************************************************************************************/
 
 //* Prevent loading this file directly
-defined( 'ABSPATH' ) || exit;  
+defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'America_Theme_Extender' ) ) {
-	
+
 	class America_Theme_Extender {
 
 		const VERSION = '1.2.0';
@@ -30,7 +30,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		// stores template files
 		public $templates = array();
- 
+
 		/**
 		 * Constructor
 		 * @param string $site_dir directory to grandchild assets
@@ -40,14 +40,14 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 			$this->site_dir = $site_dir;
 			$this->site_uri = $site_uri;
- 
+
 			add_action( 'init',	array( $this, 'america_theme_init' ) );
 		}
 
 
 		/**
 		 * Adds template filter if any theme has grandchild assets
-		 * 
+		 *
 		 * @return void
 		 */
 		public function america_theme_init() {
@@ -62,12 +62,12 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		/**
 		 * Initializes register css and load text domain
-		 * 
+		 *
 		 * @return void
 		 */
 		public function america_initialize_assets() {
 			$this->america_load_plugin_textdomain();
-			
+
 			$this->america_register_css();
 
 			add_action( 'wp_enqueue_scripts', array( $this, 'america_enqueue_css' ) );
@@ -76,7 +76,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		/**
 		 * Adds internationalization support
-		 * 
+		 *
 		 * @return void
 		 */
 		public function america_load_plugin_textdomain () {
@@ -85,39 +85,39 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		/**
 		 * Register custom css class
-		 * 
+		 *
 		 * @return void
 		 */
-		public function america_register_css() { 
+		public function america_register_css() {
 			$filename = $this->site_dir . '/style.css';
 			if ( file_exists ( $filename ) ) {
 				wp_register_style ( 'grandchild_style',  $this->site_uri . '/style.css' );
-			} 
+			}
 		 }
 
 		 /**
 		 * Register custom js classess by recursing thru the folders in the /js/dist directory
 		 * and filtering out .js files
-		 * 
+		 *
 		 * @return void
 		 */
-		 public function america_enqueue_js() {		
+		 public function america_enqueue_js() {
 			$dist = $this->site_dir . '/js/dist';
-			
+
 			if ( file_exists ( $dist ) ) {
-				$dir = new RecursiveDirectoryIterator( $dist ); 
+				$dir = new RecursiveDirectoryIterator( $dist );
 				foreach ( new JSFilter( new RecursiveIteratorIterator( $dir ) ) as $file ) {
-				
+
 					$dir_path = realpath($file);
 					$site = basename($this->site_dir);
 					$start = stripos( $dir_path, $site ) + strlen($site);
 					$path = substr( $dir_path, $start );
-					
-					$fn = basename( $path, '.js' ); 
+
+					$fn = basename( $path, '.js' );
 					$url = $this->site_uri . $path;
 					wp_enqueue_script ( $fn,  $url, '', '', true );
 				}
-			} 
+			}
 		}
 
 
@@ -128,23 +128,23 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 		/**
 		 * Checks to see if template is in wp->templates array
-		 * Include it if it is 
+		 * Include it if it is
 		 *
 		 * Template Hierarchy
-		 * is_archive : 
-		 * archive-category.{slug}.php -> archive-category.{tag}.php -> category.php -> archive.php 
+		 * is_archive :
+		 * archive-category.{slug}.php -> archive-category.{tag}.php -> category.php -> archive.php
 		 * 		archive-tag.{slug}.php -> archive-tag.{tag}.php -> tag.php -> archive.php
 		 * 		archive-{taxonomy-term}.php -> archive-{taxonomy}.php -> taxonomy.php -> archive.php
 		 * 		date.php
 		 * 		author.php
-		 * 	
+		 *
 		 *  is_post_type_archive()
-		 *  	archive-{post-type}.php -> archive.php 
-		 *  	
+		 *  	archive-{post-type}.php -> archive.php
+		 *
 		 *  is_singular()
-		 *  	single-{post-type}.php -> single.php 
+		 *  	single-{post-type}.php -> single.php
 		 *  	single-post.php -> single.php
-		 * 
+		 *
 		 * @param string  $template template being included
 		 * @return string template path
 		 */
@@ -152,10 +152,10 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			//echo 'incoming: ' . $template . '<br>';
 
 			$filename = $this->america_search_for_template();
-			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );	
-			
+			$filename = ( trim($filename) != '' ) ? $filename : basename( $template );
+
 			if( in_array( $filename, $this->templates ) ) {
-				$template = $this->site_dir . '/' . $filename; 
+				$template = $this->site_dir . '/' . $filename;
 			}
 
 			//echo 'outgoing: ' . $template . '<br><br>';
@@ -178,10 +178,10 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 			if( $this->america_has_template( $slug ) ) {
 				$filename = $slug;
-			} 
+			}
 			else if ( $this->america_has_template( $id ) ) {
 				$filename = $id;
-			} 
+			}
 			else if ( $this->america_has_template( "$type.php" ) ) {
 				$filename = "$type.php";
 			}
@@ -192,20 +192,20 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		/**
 		 * Determines which type of template is loaded and then looks for matching templates
 		 * starting with more specific and working out according to the template hierarchy
-		 * 
+		 *
 		 * @return string filename of matched template
 		 */
 		function america_search_for_template() {
 			$obj = get_queried_object();
 			$filename = '';
-			
+
 			// taxonomy archives
 			if ( is_tax() ) {
 				$filename = $this->america_fetch_template_type( 'taxonomy', $obj->slug,  $obj->taxonomy );
-			} 
-			
+			}
+
 			// category archives
-			else if ( is_category() ) {		
+			else if ( is_category() ) {
 				$filename = $this->america_fetch_template_type( 'category', $obj->slug,  $obj->cat_ID );
 			}
 			// tag archives
@@ -219,21 +219,21 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 				if( $this->america_has_template( $cpt ) ) {
 					$filename = $cpt;
 				}
-			} 
+			}
 
 			// single posts/pages
 			// is_singular() : returns true for any is_single(), is_page(), or is_attachment()
 			else if ( is_singular() ) {
-				
-				// is_single() : returns true for single post of any post type (except attachment and page post types)				
+
+				// is_single() : returns true for single post of any post type (except attachment and page post types)
 				if ( is_single() ) {
 					$post_type = $obj->post_type;
 					$post = 'single-' . $post_type . '.php';
-					
+
 					if( $this->america_has_template( $post ) ) {
 						$filename = $post;
 					}
-					
+
 				} else if ( is_page() ) {
 					// not sure if we need this as custom pages may be directly linked to
 				}
@@ -245,7 +245,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 		/**
 		 * Checks to see if template is in custom template array
 		 * @param  string  $template filename to look for
-		 * @return boolean           
+		 * @return boolean
 		 */
 		function america_has_template( $template ) {
 			return in_array( $template, $this->templates ) ;
@@ -253,9 +253,9 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 
 
 		/**
-		 * Checks grandchild folder for customized templates and adds templates to 
+		 * Checks grandchild folder for customized templates and adds templates to
 		 * templates array if present
-		 * 
+		 *
 		 * @param  string  dir path to grandchild assets (i.e. /climate, /misinfo )
 		 * @return array   array of templates null if none present
 		 */
@@ -281,7 +281,7 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 			echo 'singular any ' .	   is_singular() . '<br>';
 			echo 'search ' 		 .	   is_search() . '<br>';
 			echo 'page ' 		 .	   is_page() . '<br>';
-		
+
 			if( $dump ) {
 				echo '<pre>';
 				var_dump($obj);
@@ -295,18 +295,17 @@ if ( ! class_exists( 'America_Theme_Extender' ) ) {
 /**
  * Filter that returns only .php files
  */
-class TemplateFilter extends FilterIterator { 
+class TemplateFilter extends FilterIterator {
 	public function accept() {
-		return preg_match( '@\.php$@i', $this->current() ); 
+		return preg_match( '@\.php$@i', $this->current() );
 	}
 }
 
 /**
  * Filter that returns only .js files
  */
-class JSFilter extends FilterIterator { 
+class JSFilter extends FilterIterator {
 	public function accept() {
-		return preg_match( '@\.js$@i', $this->current() ); 
+		return preg_match( '@\.js$@i', $this->current() );
 	}
 }
-
